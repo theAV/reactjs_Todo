@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {Grid, Row, Col, Panel, Well, ListGroup, ListGroupItem, Checkbox, Glyphicon, Button, ButtonGroup} from 'react-bootstrap';
 import AddToList from './addtolist';
-// import db from './Indexed_db/indexdb'
+import db from './Indexed_db/indexdb'
 
 
 class App extends Component {
@@ -74,6 +74,11 @@ class App extends Component {
    * method insert data into todo list
    */
   addToTodo(data){
+    db.table('todos').add(data).then((id) => {
+      
+    }).catch(function (e) {
+      
+    });
     let todolist = this.state.todos;
     let updatedObj;
     let isKeyExist = todolist.find(function (obj) { return obj.id === data.id });
@@ -157,13 +162,19 @@ class App extends Component {
   /** 
   * init state of todo priority
   */
-  componentWillMount(){
-    let alreadyDoneMarked = this.state.todos.filter((x)=>{
-      return x.done === true;
-    })
-    this.setState({
-      slectedList: alreadyDoneMarked
-    })
+  componentDidMount(){
+    console.log(db.Collection())
+    db.table('todos').toArray().then((todos) => {      
+      this.setState({
+        todos: todos
+      })
+    });
+    // let alreadyDoneMarked = this.state.todos.filter((x)=>{
+    //   return x.done === true;
+    // })
+    // this.setState({
+    //   slectedList: alreadyDoneMarked
+    // })
   };
 
   onChange(){}

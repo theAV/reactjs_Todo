@@ -46,8 +46,11 @@ export default new IDB();*/
 
 import Dexie from 'dexie';
 
-const db = Dexie('todos');
+const db = new Dexie('TodoDB');
 
-db.version(1).stores({ todos: '++id' });
+db.version(1).stores({ 
+    todos: "id, text, defaultPriority, done",
+    donetodos: "id, text, defaultPriority, done"
+});
 
 export default db;

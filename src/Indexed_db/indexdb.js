@@ -1,7 +1,7 @@
 /**
  * Indexed DB services
  */
-class IDB {
+/*class IDB {
     InitDB() {
         if (!window.indexedDB) {
             window.alert("Your browser doesn't support a stable version of IndexedDB.")
@@ -37,7 +37,17 @@ class IDB {
             }
         }, (err) => {
             console.log(err)
+        }).catch(function (err) {
+            console.log(err);
         })
     }
 }
-export default new IDB();
+export default new IDB();*/
+
+import Dexie from 'dexie';
+
+const db = Dexie('todos');
+
+db.version(1).stores({ todos: '++id' });
+
+export default db;

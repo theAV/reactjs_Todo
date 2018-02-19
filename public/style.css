@@ -1,15 +1,23 @@
-.panel > .list-group .todo-list{
-	border-left: 2px solid #8c8c8c;
+.panel > .list-group .todo-list {
+    border-left: 2px solid #8c8c8c;
 }
-.panel > .list-group .high-priority{
-	border-left-color: #dc4e4e;
+
+.panel > .list-group .high-priority {
+    border-left-color: #dc4e4e;
 }
-.panel > .list-group .medium-priority{
-	border-left-color: #36a9e2;
+
+.panel > .list-group .medium-priority {
+    border-left-color: #36a9e2;
 }
+
 .btn-group + .checkbox-inline,
 .pull-right+.overflow {
-	display: block;
-	overflow: hidden;
-	padding-right: 15px;
+    display: block;
+    overflow: hidden;
+    padding-right: 15px;
+}
+
+.no-data {
+    padding: 100px 40px;
+    color: #b9b8b8;
 }

@@ -42,19 +42,20 @@ class AddToList extends Component{
 	 */
 	addText(){
 		let todoForm = document.getElementsByName('todoForm')[0];
-		let tododata = {};
 		let date = new Date();
 		let idComponent = [
 			date.getYear(),
 			date.getMilliseconds(),
 			date.getHours()
-		];
-		
-		tododata.id = (this.props.updatingId > 0) ? this.props.updatingId : parseInt(idComponent.join('') + Math.floor((Math.random() * 100)), 0);
-		tododata.text = todoForm.text.value;
-		tododata.priority = (todoForm.priority.value === "") ? this.state.blankform.defaultPriority : parseInt(todoForm.priority.value, 0) ;
-		tododata.done = false;
-
+		].join('');
+		let timestamp = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + ":" + date.getMilliseconds();
+		let tododata = {
+			id : (this.props.updatingId > 0) ? this.props.updatingId : parseInt(idComponent + Math.floor((Math.random() * 100)), 0),
+			text: todoForm.text.value,
+			priority: (todoForm.priority.value === "") ? this.state.blankform.defaultPriority : parseInt(todoForm.priority.value, 0),
+			done: false,
+			timestamp
+		}
 		this.props.addtoListHandler(tododata);
 
 		this.formReset();		

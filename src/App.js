@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import {Grid, Row, Col, Panel, Well, ListGroup, ListGroupItem, Checkbox, Glyphicon, Button, ButtonGroup} from 'react-bootstrap';
 import AddToList from './addtolist';
-import db from './Indexed_db/indexdb'
+import db from './Indexed_db/indexdb';
+import ConfirmationModal from './modals/confirmation-modal';
+import utilities from './utilities';
 
 
 class App extends Component {
@@ -9,11 +11,12 @@ class App extends Component {
     super(props);
     this.state = {
       todos: [],
-      slectedList : [],
+      donetodos : [],
       isUpdating: false,
-      updatingId:0
+      updatingId: 0,
+      isLoading: false
     }
-    this.ListSelecthandler = this.ListSelecthandler.bind(this);
+    this.todoDone = this.todoDone.bind(this);
     this.removeFromDone = this.removeFromDone.bind(this);
     this.onChange = this.onChange.bind(this);
     this.addToTodo = this.addToTodo.bind(this);
@@ -21,38 +24,32 @@ class App extends Component {
     this.removeTodo = this.removeTodo.bind(this);
     this.editTodo = this.editTodo.bind(this);
     this.cancel = this.cancel.bind(this);
+    this.confirmationForDelete = this.confirmationForDelete.bind(this);
   };
 
   /**
    * select from todo
   */
-  ListSelecthandler(e){
-    let data = this.state.todos;
-    const selectedTopicId = parseInt(e.target.value, 0);
-    let preSelected = this.state.slectedList;
-    let newAdded = [];
-      for (var i = data.length - 1; i >= 0; i--) {
-        if(data[i].id === selectedTopicId){
-          data[i].done = !data[i].done;
-          if(preSelected.indexOf(data[i]) === -1){
-            preSelected.push(data[i]);
-          }else{
-            preSelected.splice(preSelected.indexOf(data[i]), 1);
-          }
-          newAdded = preSelected;
-        }
-      }
+  todoDone(e){
     this.setState({
-      todos: data,
-      slectedList: newAdded
-    })
+      isLoading: true
+    });
+    let todolist = this.state.todos;
+    const selectedTodoId = parseInt(e.target.value, 0);
+    let d = todolist.filter((obj) =>  obj.id === selectedTodoId)[0];
+      db.table('donetodos').add(d).then((id)=>{
+        this.setState(prevState => ({
+          donetodos: utilities.sortArrTimeDesc([...prevState.donetodos, d], 'timestamp'),
+          isLoading: false
+        }))
+      });
   };
 
   /**
    * remove from done list
    */
   removeFromDone(id){
-    let SelectedList = this.state.slectedList;
+    let SelectedList = this.state.donetodos;
     let data = this.state.todos.slice(0);
     SelectedList.forEach(function(value, index){
       if(value.id===id){
@@ -66,7 +63,7 @@ class App extends Component {
     });
     this.setState({
       todos: data,
-      slectedList: SelectedList
+      donetodos: SelectedList
     });
   }
   
@@ -74,46 +71,58 @@ class App extends Component {
    * method insert data into todo list
    */
   addToTodo(data){
-    db.table('todos').add(data).then((id) => {
-      
-    }).catch(function (e) {
-      
+    this.setState({
+      isLoading: true
     });
     let todolist = this.state.todos;
-    let updatedObj;
     let isKeyExist = todolist.find(function (obj) { return obj.id === data.id });
     if (todolist.length > 0 && isKeyExist){
-      for (var i = todolist.length - 1; i >= 0; i--) {
-        if (todolist[i].id === data.id){
-          todolist[i] = data; 
-          updatedObj = todolist;          
-        }  
-      }
+        todolist.forEach((key, index)=>{
+          if (key.id === data.id){            
+            data.timestamp = key.timestamp
+            db.table('todos').update(data.id, data).then(()=>{
+                db.table('todos').toArray().then((todos) => {
+                  this.setState({
+                    todos: utilities.sortArrTimeDesc(todos, 'timestamp'),
+                    isUpdating: false,
+                    updatingId: 0,
+                    isLoading: false
+                  })
+              });
+            }).catch(function (e) {
+              console.error(e);
+            });
+          }
+        })
     }else{
-      updatedObj = todolist;
-      updatedObj.push(data);
+      db.table('todos').add(data).then((id) => {
+        this.setState(prevState =>({
+          todos: utilities.sortArrTimeDesc([...prevState.todos, data], 'timestamp'),
+          isLoading: false
+        }))
+      }).catch(function (e) { 
+        console.error(e);
+      });
     }
-
-    this.setState({
-      todos: updatedObj,
-      isUpdating: false,
-      updatingId: 0
-    });
   };
   
   /**
    * handler for remove item from todo list
    */
+  confirmationForDelete(idFor){
+    this.refs.modalReference.handleShow(idFor);
+  }
   removeTodo(id){
-    let data = this.state.todos;
-    for (let i = 0; i < data.length; i++) {
-      if(data[i].id === id){
-        data.splice(data.indexOf(data[i]), 1);
-      }
-    }
-    this.setState({
-      todos: data
-    })
+    db.table('todos').delete(id).then(() => {
+      const newList = this.state.todos.filter((todo) => todo.id !== id);
+      this.setState(prevState => ({
+        todos: newList,
+        isLoading: false
+      }))
+      this.refs.modalReference.handleClose();
+    }).catch(function (e) {
+      console.error(e);
+    });
   };
 
   /** 
@@ -163,25 +172,28 @@ class App extends Component {
   * init state of todo priority
   */
   componentDidMount(){
-    console.log(db.Collection())
-    db.table('todos').toArray().then((todos) => {      
+    this.setState({
+      isLoading: true
+    })
+    db.table('todos').toArray().then((todos) => {
+        this.setState({
+          todos: utilities.sortArrTimeDesc(todos, 'timestamp'),
+          isLoading: false
+        })   
+    });
+    db.table('donetodos').toArray().then((donetodos) => {
       this.setState({
-        todos: todos
+        donetodos: utilities.sortArrTimeDesc(donetodos, 'timestamp'),
+        isLoading: false
       })
     });
-    // let alreadyDoneMarked = this.state.todos.filter((x)=>{
-    //   return x.done === true;
-    // })
-    // this.setState({
-    //   slectedList: alreadyDoneMarked
-    // })
   };
 
   onChange(){}
   
   render() {
-    const hasSelected = this.state.slectedList;
-    let data = this.state.todos;    
+    const hasSelected = this.state.donetodos;
+    let data = this.state.todos;
     let RemainingTodo = function(){
       return data.filter((x)=>{
         return !x.done;
@@ -197,7 +209,7 @@ class App extends Component {
               <Button bsSize="xs" bsStyle="primary" disabled={x.done === true || (this.state.updatingId === x.id)} onClick={this.editTodo.bind(this, x.id)}>
                 <Glyphicon glyph="edit" />
               </Button>
-              <Button bsSize="xs" bsStyle="danger" disabled={(this.state.updatingId === x.id)} onClick={this.removeTodo.bind(this, x.id)}>
+              <Button bsSize="xs" bsStyle="danger" disabled={(this.state.updatingId === x.id)} onClick={this.confirmationForDelete.bind(this, x.id)}>
                 <Glyphicon glyph="remove" />
               </Button>
             </ButtonGroup>    
@@ -205,7 +217,7 @@ class App extends Component {
               value = {x.id} 
               checked = {x.done === true}
               disabled={x.done === true || (this.state.updatingId === x.id)} 
-              onChange = {this.onChange} onClick={this.ListSelecthandler}>
+              onChange = {this.onChange} onClick={this.todoDone}>
               <div>
                 {x.text} <i className="small">{(this.state.updatingId === x.id) ? 'Editing' : ''} </i>
                 <div className="small text-muted">
@@ -229,25 +241,39 @@ class App extends Component {
     return (
       <Grid>
         <Row>
-        <Col lg={6} lgOffset={3}>
-          <br />
-          <Well>
-              <AddToList ref={instance => { this.child = instance; }} cancel={this.cancel} addtoListHandler={this.addToTodo} isUpdating={this.state.isUpdating} updatingId={this.state.updatingId}/>
-          </Well>
-        </Col>
-        {data.length > 0 &&
+          <Col lg={6} lgOffset={3}>
+            <br />
+            <Well>
+                <AddToList ref={instance => { this.child = instance; }} cancel={this.cancel} addtoListHandler={this.addToTodo} isUpdating={this.state.isUpdating} updatingId={this.state.updatingId}/>
+            </Well>
+          </Col>
           <Col lg={6}>
             <Panel>
               <Panel.Heading>
-                <Panel.Title componentClass="h3">Todos</Panel.Title>
+                <Panel.Title componentClass="h3">
+                  {(this.state.isLoading) &&
+                    <span className="pull-right text-muted">
+                      Loading...
+                    </span>
+                  }
+                Todos
+                </Panel.Title>
               </Panel.Heading>
+              {(!data.length && !this.state.isLoading) &&
+                <div className="text-center no-data">
+                  <h4><Glyphicon glyph="alert" /></h4>
+                  <h4>There are no Todo to show</h4>
+                </div>
+              }
+              {data.length > 0 &&
               <ListGroup>
                 <ListGroupItem bsStyle="info">Remaining: {RemainingTodo()}</ListGroupItem>
                 {defaultList}
               </ListGroup>
+              }
             </Panel>
           </Col>
-        }
+        
           {hasSelected.length > 0 && <Col lg={6}>
             <Panel>
               <Panel.Heading>
@@ -260,10 +286,10 @@ class App extends Component {
           </Col>
           }
         </Row>
+        <ConfirmationModal ref="modalReference" permissionHandler={this.removeTodo} msg={"Are you sure, you want to do this action?"}></ConfirmationModal>
       </Grid>
     );
   }
 }
-
 export default App;
 

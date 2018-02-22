@@ -7,4 +7,10 @@ const sortArrTimeDesc = (arr, key) => {
         return 0;
     });
 }
-export default { sortArrTimeDesc };
+
+const createdTimeStamp = () =>{
+    let date = new Date(),
+    timestamp = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds(); 
+    return timestamp;
+}
+export default { sortArrTimeDesc, createdTimeStamp };

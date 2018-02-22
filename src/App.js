@@ -34,15 +34,25 @@ class App extends Component {
     this.setState({
       isLoading: true
     });
-    let todolist = this.state.todos;
+    let todolist = this.state.todos.slice();
     const selectedTodoId = parseInt(e.target.value, 0);
-    let d = todolist.filter((obj) =>  obj.id === selectedTodoId)[0];
-      db.table('donetodos').add(d).then((id)=>{
+    let completedTodo = todolist.filter((obj) =>  obj.id === selectedTodoId)[0];
+        completedTodo.timestamp = utilities.createdTimeStamp();
+    db.table('todos').update(selectedTodoId, {done: true}).then((todo)=>{
+      let completedTodoState = todolist.find(function (value) { return  value.id === selectedTodoId});
+      
+      completedTodoState.done = !completedTodoState.done;
+
+      db.table('donetodos').add(completedTodo).then((id)=>{
         this.setState(prevState => ({
-          donetodos: utilities.sortArrTimeDesc([...prevState.donetodos, d], 'timestamp'),
+          // todos: [...prevState.todos, completedTodoState],
+          donetodos: utilities.sortArrTimeDesc([...prevState.donetodos, completedTodo], 'timestamp'),
           isLoading: false
         }))
       });
+    }).catch((error)=>{
+      console.log(error);
+    })
   };
 
   /**

@@ -3,6 +3,7 @@
  */
 import React, { Component } from 'react';
 import {Button, FormGroup, ControlLabel, FormControl, Radio} from 'react-bootstrap';
+import utilities from './utilities';
 
 class AddToList extends Component{
 	constructor(props){
@@ -48,13 +49,12 @@ class AddToList extends Component{
 			date.getMilliseconds(),
 			date.getHours()
 		].join('');
-		let timestamp = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + ":" + date.getMilliseconds();
 		let tododata = {
 			id : (this.props.updatingId > 0) ? this.props.updatingId : parseInt(idComponent + Math.floor((Math.random() * 100)), 0),
 			text: todoForm.text.value,
 			priority: (todoForm.priority.value === "") ? this.state.blankform.defaultPriority : parseInt(todoForm.priority.value, 0),
 			done: false,
-			timestamp
+			timestamp: utilities.createdTimeStamp()
 		}
 		this.props.addtoListHandler(tododata);
 

@@ -3,7 +3,8 @@
  */
 import React, { Component } from 'react';
 import {Button, FormGroup, ControlLabel, FormControl, Radio} from 'react-bootstrap';
-import utilities from './utilities';
+import Utilities from './utilities';
+import DateTimePicker from 'react-datetime-picker';
 
 class AddToList extends Component{
 	constructor(props){
@@ -13,7 +14,8 @@ class AddToList extends Component{
 				id: 0,
 				text: "",
 				defaultPriority: 3,
-				done: false
+				done: false,
+				date: new Date()
 			},
 			btnDisabled: true		
 		}
@@ -23,6 +25,7 @@ class AddToList extends Component{
 		this.EditTodoHandler = this.EditTodoHandler.bind(this);
 		this.CancelEditing = this.CancelEditing.bind(this);
 		this.formReset = this.formReset.bind(this);
+		this.onDateTimeChange = this.onDateTimeChange.bind(this);
 	};
 
 	/**
@@ -49,15 +52,16 @@ class AddToList extends Component{
 			date.getMilliseconds(),
 			date.getHours()
 		].join('');
+		
 		let tododata = {
 			id : (this.props.updatingId > 0) ? this.props.updatingId : parseInt(idComponent + Math.floor((Math.random() * 100)), 0),
-			text: todoForm.text.value,
+			text: this.state.blankform.text,
 			priority: (todoForm.priority.value === "") ? this.state.blankform.defaultPriority : parseInt(todoForm.priority.value, 0),
 			done: false,
-			timestamp: utilities.createdTimeStamp()
+			date: Utilities.dateTimeFormate(this.state.blankform.date),
+			timestamp: Utilities.createdTimeStamp()
 		}
 		this.props.addtoListHandler(tododata);
-
 		this.formReset();		
 	};
 
@@ -71,7 +75,7 @@ class AddToList extends Component{
 		blankForm['id'] = Obj.id;
 		blankForm['text'] = Obj.text;
 		blankForm['defaultPriority'] = Obj.priority;
-		blankForm['done'] = Obj.done;				
+		blankForm['done'] = Obj.done;
 		this.setState({
 			blankform: blankForm,
 			btnDisabled: false
@@ -95,6 +99,13 @@ class AddToList extends Component{
 		this.props.cancel();
 		this.formReset();
 	}
+	onDateTimeChange(date){
+		let blankForm = this.state.blankform;
+		blankForm['date'] = date;
+		this.setState({
+			blankform:blankForm
+		});
+	}
 	
 	/**
 	 * form reset 
@@ -105,6 +116,7 @@ class AddToList extends Component{
 		blankForm['text'] = "";
 		blankForm['defaultPriority'] = 3;
 		blankForm['done'] = false;
+		blankForm['date'] = new Date();
 		this.setState({
 			blankform: blankForm,
 			btnDisabled: true
@@ -118,6 +130,13 @@ class AddToList extends Component{
 			      <ControlLabel>Todo Text</ControlLabel>
 					<FormControl name="text" onChange={this.inputChangeHandler} componentClass="textarea" value={this.state.blankform.text} placeholder="Write here..." />
 			    </FormGroup>
+				<div className="form-group">
+				<DateTimePicker 
+					onChange={this.onDateTimeChange}
+					value={this.state.blankform.date}
+					minDate={new Date()}
+					/>
+				</div>
 			    <FormGroup>
 			    	<div><ControlLabel>Set Priority</ControlLabel></div>
 			    	<Radio onChange={this.onPriorityChange} name="priority" checked={priority_lavel===1} value="1" inline>

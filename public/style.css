@@ -21,3 +21,6 @@
     padding: 100px 40px;
     color: #b9b8b8;
 }
+.react-datetime-picker__calendar, .react-datetime-picker__clock{
+    z-index: 5;
+}

@@ -3,8 +3,7 @@ import {Grid, Row, Col, Panel, Well, ListGroup, ListGroupItem, Checkbox, Glyphic
 import AddToList from './addtolist';
 import db from './Indexed_db/indexdb';
 import ConfirmationModal from './modals/confirmation-modal';
-import utilities from './utilities';
-
+import Utilities from './utilities';
 
 class App extends Component {
   constructor(props){
@@ -37,19 +36,19 @@ class App extends Component {
     let todolist = this.state.todos.slice();
     const selectedTodoId = parseInt(e.target.value, 0);
     let completedTodo = todolist.filter((obj) =>  obj.id === selectedTodoId)[0];
-        completedTodo.timestamp = utilities.createdTimeStamp();
+        completedTodo.timestamp = Utilities.createdTimeStamp();
     db.table('todos').update(selectedTodoId, {done: true}).then((todo)=>{
       let completedTodoState = todolist.find(function (value) { return  value.id === selectedTodoId});
-      
+
       completedTodoState.done = !completedTodoState.done;
 
       db.table('donetodos').add(completedTodo).then((id)=>{
         this.setState(prevState => ({
-          // todos: [...prevState.todos, completedTodoState],
-          donetodos: utilities.sortArrTimeDesc([...prevState.donetodos, completedTodo], 'timestamp'),
+          donetodos: Utilities.sortArrTimeDesc([...prevState.donetodos, completedTodo], 'timestamp'),
           isLoading: false
         }))
       });
+
     }).catch((error)=>{
       console.log(error);
     })
@@ -59,22 +58,26 @@ class App extends Component {
    * remove from done list
    */
   removeFromDone(id){
-    let SelectedList = this.state.donetodos;
-    let data = this.state.todos.slice(0);
-    SelectedList.forEach(function(value, index){
-      if(value.id===id){
-        SelectedList.splice(index, 1);
-        data.forEach(function(val, indx){
-          if(val===value){
-            val.done = !val.done;
-          }
-        })
-      }
-    });
     this.setState({
-      todos: data,
-      donetodos: SelectedList
+      isLoading: true
     });
+    db.table('donetodos').delete(id).then(()=>{      
+      db.table('todos').update(id, {done: false}).then((todo)=>{
+        db.table('todos').toArray().then((todos)=>{
+          db.table('donetodos').toArray().then((donetodo)=>{
+            this.setState({
+              todos:Utilities.sortArrTimeDesc(todos, 'timestamp'),
+              donetodos: Utilities.sortArrTimeDesc(donetodo, 'timestamp'),
+              isLoading: false
+            });
+          })
+        })
+
+      })
+
+    }).catch((e)=>{
+      console.log(e);
+    })
   }
   
   /**
@@ -93,7 +96,7 @@ class App extends Component {
             db.table('todos').update(data.id, data).then(()=>{
                 db.table('todos').toArray().then((todos) => {
                   this.setState({
-                    todos: utilities.sortArrTimeDesc(todos, 'timestamp'),
+                    todos: Utilities.sortArrTimeDesc(todos, 'timestamp'),
                     isUpdating: false,
                     updatingId: 0,
                     isLoading: false
@@ -107,7 +110,7 @@ class App extends Component {
     }else{
       db.table('todos').add(data).then((id) => {
         this.setState(prevState =>({
-          todos: utilities.sortArrTimeDesc([...prevState.todos, data], 'timestamp'),
+          todos: Utilities.sortArrTimeDesc([...prevState.todos, data], 'timestamp'),
           isLoading: false
         }))
       }).catch(function (e) { 
@@ -187,13 +190,13 @@ class App extends Component {
     })
     db.table('todos').toArray().then((todos) => {
         this.setState({
-          todos: utilities.sortArrTimeDesc(todos, 'timestamp'),
+          todos: Utilities.sortArrTimeDesc(todos, 'timestamp'),
           isLoading: false
         })   
     });
     db.table('donetodos').toArray().then((donetodos) => {
       this.setState({
-        donetodos: utilities.sortArrTimeDesc(donetodos, 'timestamp'),
+        donetodos: Utilities.sortArrTimeDesc(donetodos, 'timestamp'),
         isLoading: false
       })
     });
@@ -232,6 +235,8 @@ class App extends Component {
                 {x.text} <i className="small">{(this.state.updatingId === x.id) ? 'Editing' : ''} </i>
                 <div className="small text-muted">
                   <i>{(x.priority === 1) ? 'High Priority' : '' || (x.priority === 2) ? 'Medium Priority' : '' || (x.priority === 3) ? 'Low Priority' : ''}</i>
+                  &nbsp;&nbsp;|&nbsp;&nbsp; 
+                  <i className="text-muted">{x.date}</i>
                 </div>
               </div>
             </Checkbox>

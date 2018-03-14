@@ -49,8 +49,8 @@ import Dexie from 'dexie';
 const db = new Dexie('TodoDB');
 
 db.version(1).stores({ 
-    todos: "id, text, defaultPriority, done",
-    donetodos: "id, text, defaultPriority, done"
+    todos: "id, text, defaultPriority, done, date",
+    donetodos: "id, text, defaultPriority, done, date"
 });
 
 export default db;

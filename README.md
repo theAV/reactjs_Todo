@@ -1,2 +1,2 @@
-# Reactjs todo with indexedDB
-Reactjs todo with indexedDB
+# ReactJS todo with indexedDB
+ReactJS todo with indexedDB

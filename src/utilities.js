@@ -16,9 +16,8 @@ const createdTimeStamp = () => {
     return timestamp;
 }
 const dateTimeFormate = (date_string) => {
-    
     let convertedDateTime = date_string.getDate() + " " +
-        monthArray[date_string.getMonth() + 1] + " " +  
+        monthArray[date_string.getMonth()] + " " +  
         date_string.getFullYear() + ", " +
         ((date_string.getHours()>9)?date_string.getHours():("0"+date_string.getHours())) + ":" + 
         ((date_string.getMinutes()>9)?date_string.getMinutes():("0"+date_string.getMinutes()));

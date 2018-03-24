@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+// import * as firebase from 'firebase';
 import {Grid, Row, Col, Panel, Well, ListGroup, ListGroupItem, Checkbox, Glyphicon, Button, ButtonGroup} from 'react-bootstrap';
 import AddToList from './addtolist';
 import db from './Indexed_db/indexdb';
@@ -87,6 +88,7 @@ class App extends Component {
     this.setState({
       isLoading: true
     });
+   
     let todolist = this.state.todos;
     let isKeyExist = todolist.find(function (obj) { return obj.id === data.id });
     if (todolist.length > 0 && isKeyExist){
@@ -143,7 +145,7 @@ class App extends Component {
   */
   editTodo(id){
     let editId = this.state.todos.filter(item =>
-      {return item.id === id}
+      item.id === id
     )
     this.child.EditTodoHandler(editId);
     this.setState({
@@ -185,6 +187,23 @@ class App extends Component {
   * init state of todo priority
   */
   componentDidMount(){
+    // Initialize Firebase
+    // var config = {
+    //   apiKey: "AIzaSyAEI9LIEtSjKsC6sHDHOeoky2l0pp3OVpc",
+    //   authDomain: "todos-aeb59.firebaseapp.com",
+    //   databaseURL: "https://todos-aeb59.firebaseio.com",
+    //   projectId: "todos-aeb59",
+    //   storageBucket: "todos-aeb59.appspot.com",
+    //   messagingSenderId: "96043356152"
+    // };
+    // firebase.initializeApp(config);
+    // var database = firebase.database().ref().child('todotable');
+    // var todo = database.child('todo');
+    // todo.on('value', function(snap){
+    //   console.log(todo)
+    //   snap.val();
+    // })
+
     this.setState({
       isLoading: true
     })
@@ -200,6 +219,7 @@ class App extends Component {
         isLoading: false
       })
     });
+    
   };
 
   onChange(){}
@@ -282,7 +302,7 @@ class App extends Component {
               }
               {data.length > 0 &&
               <ListGroup>
-                <ListGroupItem bsStyle="info">Remaining: {RemainingTodo()}</ListGroupItem>
+                <ListGroupItem bsStyle={RemainingTodo() ? "info": "success"}>Remaining: {RemainingTodo()}</ListGroupItem>
                 {defaultList}
               </ListGroup>
               }

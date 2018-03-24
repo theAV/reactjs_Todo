@@ -70,12 +70,13 @@ class AddToList extends Component{
 	 * todo edit handler
 	 */
 	EditTodoHandler(obj){
-		let Obj = obj[0];
+		let Obj = obj[0];		
 		let blankForm = this.state.blankform;
 		blankForm['id'] = Obj.id;
 		blankForm['text'] = Obj.text;
 		blankForm['defaultPriority'] = Obj.priority;
 		blankForm['done'] = Obj.done;
+		blankForm['date'] = new Date(Obj.date);
 		this.setState({
 			blankform: blankForm,
 			btnDisabled: false
